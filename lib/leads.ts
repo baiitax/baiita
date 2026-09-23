@@ -37,7 +37,14 @@ export interface Lead {
   booking?: { slot: string; confirmedAt: string } | null;
 }
 
-const DATA_DIR = path.join(process.cwd(), ".data");
+// On serverless platforms (Vercel/AWS Lambda) the project dir is read-only;
+// only /tmp is writable. Note: /tmp is ephemeral — for durable lead storage
+// in production, swap this layer for Supabase/Postgres (it's isolated here
+// for exactly that migration).
+const IS_SERVERLESS = !!process.env.VERCEL || !!process.env.AWS_LAMBDA_FUNCTION_NAME;
+const DATA_DIR = IS_SERVERLESS
+  ? path.join("/tmp", "baiita-data")
+  : path.join(process.cwd(), ".data");
 const LEADS_FILE = path.join(DATA_DIR, "leads.json");
 
 function ensure() {
